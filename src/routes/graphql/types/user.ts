@@ -1,59 +1,78 @@
-import { GraphQLString, GraphQLObjectType, GraphQLList, GraphQLNonNull, GraphQLFloat, GraphQLInputObjectType } from 'graphql';
-import { ProfileType } from './profile.js';
+import {
+  GraphQLInputObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
 import { UUIDType } from './uuid.js';
+import { ProfileType } from './profile.js';
 import { PostType } from './post.js';
-import { Context, ID } from './common.js';
+import { GraphQLObjectTypeWithContext } from './common.js';
+import { GraphQLFloat } from 'graphql/index.js';
 
-export const UserType: GraphQLObjectType = new GraphQLObjectType({
-  name: 'User',
-
+export type CreateUserDto = { name: string; balance: number };
+type SubscribeInfo = {
+  subscriberId: string;
+  authorId: string;
+};
+type UserWithSubscribe = CreateUserDto & {
+  id: string;
+  userSubscribedTo?: SubscribeInfo[];
+  subscribedToUser?: SubscribeInfo[];
+};
+export const UserType = new GraphQLObjectTypeWithContext({
+  name: 'UserType',
   fields: () => ({
-    id: { type: new GraphQLNonNull(UUIDType) },
     name: { type: new GraphQLNonNull(GraphQLString) },
     balance: { type: new GraphQLNonNull(GraphQLFloat) },
-
+    id: { type: new GraphQLNonNull(UUIDType) },
     profile: {
-      type: ProfileType,
-      resolve: async (source: ID, args, { prisma }: Context) =>
-        await prisma.profile.findUnique({ where: { userId: source.id } }),
+      type: ProfileType as GraphQLObjectType,
+      resolve: async ({ id }: { id: string }, _, { dataloaders }) =>
+        dataloaders.profile.load(id),
     },
-
     posts: {
       type: new GraphQLList(PostType),
-      resolve: async (source: ID, args, { prisma }: Context) =>
-        await prisma.post.findMany({ where: { authorId: source.id } }),
+      resolve: async ({ id }: { id: string }, _, { dataloaders }) =>
+        dataloaders.post.load(id),
     },
-
     userSubscribedTo: {
       type: new GraphQLList(UserType),
-      resolve: async (source: ID, args, { prisma }: Context) =>
-        await prisma.user.findMany({
-          where: { subscribedToUser: { some: { subscriberId: source.id } } },
-        }),
+      resolve: async (source: UserWithSubscribe, _, { dataloaders }) => {
+        if (!source.userSubscribedTo?.length) return [];
+        const usersIds = source.userSubscribedTo.map((user) => user.authorId);
+        return dataloaders.user.loadMany(usersIds);
+      },
     },
-
     subscribedToUser: {
       type: new GraphQLList(UserType),
-      resolve: async (source: ID, args, { prisma }: Context) =>
-        await prisma.user.findMany({
-          where: { userSubscribedTo: { some: { authorId: source.id } } },
-        }),
+      resolve: async (source: UserWithSubscribe, _, { dataloaders }) => {
+        if (!source.subscribedToUser?.length) return [];
+        const usersIds = source.subscribedToUser.map((user) => user.subscriberId);
+        return dataloaders.user.loadMany(usersIds);
+      },
+    },
+  }),
+}) as GraphQLObjectType;
+
+export const CreateUserInput = new GraphQLInputObjectType({
+  name: 'CreateUserInput',
+  fields: () => ({
+    name: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: 'User name, required, no default value',
+    },
+    balance: {
+      type: new GraphQLNonNull(GraphQLFloat),
     },
   }),
 });
 
-export const CreateUserInputType = new GraphQLInputObjectType({
-  name: 'CreateUserInput',
-  fields: {
-    name: { type: new GraphQLNonNull(GraphQLString) },
-    balance: { type: new GraphQLNonNull(GraphQLFloat) },
-  },
-});
-
-export const ChangeUserInputType = new GraphQLInputObjectType({
+export const ChangeUserInput = new GraphQLInputObjectType({
   name: 'ChangeUserInput',
-  fields: {
+  fields: () => ({
     name: { type: GraphQLString },
     balance: { type: GraphQLFloat },
-  },
+  }),
 });

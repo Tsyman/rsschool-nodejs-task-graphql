@@ -1,28 +1,42 @@
-import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLInputObjectType } from 'graphql';
+import { GraphQLNonNull, GraphQLString } from 'graphql';
 import { UUIDType } from './uuid.js';
+import { GraphQLObjectTypeWithContext } from './common.js';
+import { GraphQLInputObjectType } from 'graphql/index.js';
 
-export const PostType = new GraphQLObjectType({
-  name: 'Post',
+export const PostType = new GraphQLObjectTypeWithContext({
+  name: 'PostType',
   fields: () => ({
     id: { type: new GraphQLNonNull(UUIDType) },
     title: { type: new GraphQLNonNull(GraphQLString) },
     content: { type: new GraphQLNonNull(GraphQLString) },
+    authorId: {
+      type: new GraphQLNonNull(UUIDType),
+      resolve: ({ id }: { id: string }, _, { db }) => {
+        return db.user.findUnique({ where: { id } });
+      },
+    },
   }),
 });
 
-export const CreatePostInputType = new GraphQLInputObjectType({
+export const CreatePostInput = new GraphQLInputObjectType({
   name: 'CreatePostInput',
-  fields: {
+  fields: () => ({
     title: { type: new GraphQLNonNull(GraphQLString) },
     content: { type: new GraphQLNonNull(GraphQLString) },
     authorId: { type: new GraphQLNonNull(UUIDType) },
-  },
+  }),
 });
+export type CreatePostDto = {
+  title: string;
+  content: string;
+  authorId: string;
+};
 
-export const ChangePostInputType = new GraphQLInputObjectType({
+export const ChangePostInput = new GraphQLInputObjectType({
   name: 'ChangePostInput',
-  fields: {
+  fields: () => ({
     title: { type: GraphQLString },
     content: { type: GraphQLString },
-  },
+    authorId: { type: UUIDType },
+  }),
 });

@@ -1,63 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import { GraphQLObjectType } from 'graphql/index.js';
+import { createLoaders } from '../loader/loader.js';
 
-export interface Context {
-  prisma: PrismaClient;
-}
-
-export interface ID {
-  id: string;
-}
-
-export interface CreatePost {
-  dto: {
-    title: string;
-    content: string;
-    authorId: string;
-  };
-}
-
-export interface ChangePost {
-  id: string;
-  dto: {
-    title: string;
-    content: string;
-  };
-}
-
-export interface CreateProfile {
-  dto: {
-    isMale: boolean;
-    yearOfBirth: number;
-    memberTypeId: string;
-    userId: string;
-  };
-}
-
-export interface ChangeProfile {
-  id: string;
-  dto: {
-    isMale: boolean;
-    yearOfBirth: number;
-    memberTypeId: string;
-  };
-}
-
-export interface CreateUser {
-  dto: {
-    name: string;
-    balance: number;
-  };
-}
-
-export interface ChangeUser {
-  id: string;
-  dto: {
-    name: string;
-    balance: number;
-  };
-}
-
-export interface UserSubscribedTo {
-  userId: string;
-  authorId: string;
-}
+export type GraphQLContext = {
+  db: PrismaClient;
+  dataloaders: ReturnType<typeof createLoaders>;
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const GraphQLObjectTypeWithContext = GraphQLObjectType<any, GraphQLContext>;
