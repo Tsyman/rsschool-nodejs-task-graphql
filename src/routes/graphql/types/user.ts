@@ -30,19 +30,19 @@ export const UserType = new GraphQLObjectTypeWithContext({
     profile: {
       type: ProfileType as GraphQLObjectType,
       resolve: async ({ id }: { id: string }, _, { dataloaders }) =>
-        dataloaders.profile.load(id),
+        dataloaders.profileLoader.load(id),
     },
     posts: {
       type: new GraphQLList(PostType),
       resolve: async ({ id }: { id: string }, _, { dataloaders }) =>
-        dataloaders.post.load(id),
+        dataloaders.postsLoader.load(id),
     },
     userSubscribedTo: {
       type: new GraphQLList(UserType),
       resolve: async (source: UserWithSubscribe, _, { dataloaders }) => {
         if (!source.userSubscribedTo?.length) return [];
         const usersIds = source.userSubscribedTo.map((user) => user.authorId);
-        return dataloaders.user.loadMany(usersIds);
+        return dataloaders.userLoader.loadMany(usersIds);
       },
     },
     subscribedToUser: {
@@ -50,7 +50,7 @@ export const UserType = new GraphQLObjectTypeWithContext({
       resolve: async (source: UserWithSubscribe, _, { dataloaders }) => {
         if (!source.subscribedToUser?.length) return [];
         const usersIds = source.subscribedToUser.map((user) => user.subscriberId);
-        return dataloaders.user.loadMany(usersIds);
+        return dataloaders.userLoader.loadMany(usersIds);
       },
     },
   }),

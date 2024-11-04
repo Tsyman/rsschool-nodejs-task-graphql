@@ -24,7 +24,7 @@ export const ProfileType = new GraphQLObjectTypeWithContext({
         _,
         { dataloaders },
       ) => {
-        return dataloaders.memberType.load(memberTypeId);
+        return dataloaders.memberLoader.load(memberTypeId);
       },
     },
   }),

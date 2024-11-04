@@ -33,7 +33,7 @@ export const query = new GraphQLObjectType<unknown, GraphQLContext>({
         });
 
         users.forEach((user) => {
-          dataloaders.user.prime(user.id, user);
+          dataloaders.userLoader.prime(user.id, user);
         });
 
         return users;
@@ -44,7 +44,7 @@ export const query = new GraphQLObjectType<unknown, GraphQLContext>({
       description: 'Particular user',
       args: { id: { type: new GraphQLNonNull(UUIDType) } },
       resolve: async (_, { id }: { id: string }, { dataloaders }) =>
-        dataloaders.user.load(id),
+        dataloaders.userLoader.load(id),
     },
     memberTypes: {
       type: new GraphQLList(MemberType),
