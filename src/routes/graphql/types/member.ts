@@ -9,8 +9,8 @@ import { GraphQLNonNull } from 'graphql';
 export const MemberTypeIdField = new GraphQLEnumType({
   name: 'MemberTypeId',
   values: {
-    basic: { value: 'basic' },
-    business: { value: 'business' },
+    BASIC: { value: 'BASIC' },
+    BUSINESS: { value: 'BUSINESS' },
   },
 });
 export const MemberType = new GraphQLObjectType({
